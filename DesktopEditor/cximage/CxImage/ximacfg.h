@@ -57,6 +57,27 @@
 #define CXIMAGE_SUPPORT_RAW 0
 #endif
 
+// Rarely used decoders built on old, unmaintained code (JasPer, libmng,
+// libpsd, dcraw) are switched off in every build: any image inside a
+// document reaches them, and documents almost never contain these formats.
+// JPEG 2000 (JP2) stays on; it is decoded by the separate openjpeg-based
+// reader in raster/Jp2.
+#define CXIMAGE_DISABLE_SUPPORT_MNG
+#undef CXIMAGE_SUPPORT_JPC
+#undef CXIMAGE_SUPPORT_PGX
+#undef CXIMAGE_SUPPORT_PNM
+#undef CXIMAGE_SUPPORT_RAS
+#undef CXIMAGE_SUPPORT_SKA
+#undef CXIMAGE_SUPPORT_PSD
+#undef CXIMAGE_SUPPORT_RAW
+#define CXIMAGE_SUPPORT_JPC 0
+#define CXIMAGE_SUPPORT_PGX 0
+#define CXIMAGE_SUPPORT_PNM 0
+#define CXIMAGE_SUPPORT_RAS 0
+#define CXIMAGE_SUPPORT_SKA 0
+#define CXIMAGE_SUPPORT_PSD 0
+#define CXIMAGE_SUPPORT_RAW 0
+
 #ifdef CXIMAGE_DISABLE_SUPPORT_MNG
 #undef CXIMAGE_SUPPORT_MNG
 #define CXIMAGE_SUPPORT_MNG 0

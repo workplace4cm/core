@@ -166,8 +166,8 @@ HRESULT CEpubFile::Convert(const std::wstring& sInputFile, const std::wstring& s
         replace_all(sFile, L"%20", L" ");
 
         if (sFile.length() > 3 && L'.' == sFile[0] && L'.' == sFile[1] && L'/' == sFile[2] &&
-            NSProcessEnv::IsPresent(NSProcessEnv::Converter::gc_allowPrivateIP) &&
-            !NSProcessEnv::GetBoolValue(NSProcessEnv::Converter::gc_allowPrivateIP))
+            (!NSProcessEnv::IsPresent(NSProcessEnv::Converter::gc_allowPrivateIP) ||
+             !NSProcessEnv::GetBoolValue(NSProcessEnv::Converter::gc_allowPrivateIP)))
             continue;
 
         arFiles.push_back(m_sTempDir + ((!sContentPath.empty()) ? (L"/" + sContentPath) : L"" ) + L"/" + sFile);

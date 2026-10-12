@@ -293,7 +293,8 @@ namespace ZLibZipUtils
 			{
 				const std::wstring wsFilePath{NSSystemPath::ShortenPath(filenameW)};
 
-				if (wsFilePath.size() > 3 && L'.' == wsFilePath[0] && L'.' == wsFilePath[1] && L'/' == wsFilePath[2])
+				// Never write outside unzip_dir.
+				if (L".." == wsFilePath || 0 == wsFilePath.find(L"../"))
 					return UNZ_INTERNALERROR;
 			}
 

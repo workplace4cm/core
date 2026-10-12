@@ -150,7 +150,9 @@ inline bool GetStatusUsingExternalLocalFiles()
 	if (NSProcessEnv::IsPresent(NSProcessEnv::Converter::gc_allowPrivateIP))
 		return NSProcessEnv::GetBoolValue(NSProcessEnv::Converter::gc_allowPrivateIP);
 
-	return true;
+	// Off unless the caller allows it: a document must not pull in files from
+	// outside its own folder.
+	return false;
 }
 
 inline bool CanUseThisPath(const std::wstring& wsPath, const std::wstring& wsRootPath)

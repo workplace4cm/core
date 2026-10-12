@@ -213,7 +213,7 @@ namespace NSSystemPath
 
 		if (L".." == wsToken)
 		{
-			if (!arStack.empty() && L".." == arStack.top())
+			if (!arStack.empty() && L".." != arStack.top())
 				arStack.pop();
 			else
 				arStack.push(wsToken);

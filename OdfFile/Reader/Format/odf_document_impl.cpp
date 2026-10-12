@@ -336,6 +336,11 @@ bool odf_document::Impl::decrypt_file (const std::wstring &password, const std::
 		cryptData.saltValue	= DecodeBase64(key_derivation->salt_);	
 		cryptData.spinCount = key_derivation->iteration_count_;	
 		cryptData.keySize	= key_derivation->key_size_;	
+
+		// Values from the file: refuse ones that would hang key derivation or
+		// allocate absurd buffers.
+		if (cryptData.spinCount < 0 || cryptData.spinCount > 10000000 || cryptData.keySize < 1 || cryptData.keySize > 64)
+			return false;
 	}
 //------------------------------------------------------------------------------------------
 	if (start_key_generation)
@@ -352,6 +357,8 @@ bool odf_document::Impl::decrypt_file (const std::wstring &password, const std::
 			}
 		}
 		cryptData.start_hashSize = start_key_generation->key_size_;
+		if (cryptData.start_hashSize < 1 || cryptData.start_hashSize > 64)
+			return false;
 	}
 //------------------------------------------------------------------------------------------
 	if (algorithm)
