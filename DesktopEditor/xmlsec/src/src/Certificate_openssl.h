@@ -947,15 +947,39 @@ public:
 
 	virtual int VerifySelf()
 	{
-		return OPEN_SSL_WARNING_OK;
-
+		// The certificate comes from the signed document itself, so it is only
+		// trusted if it chains up to a root CA the system trusts and is within
+		// its validity period. A self-made certificate is not enough.
 		if (NULL == m_cert)
 			return OPEN_SSL_WARNING_NOVERIFY;
 
 		X509_STORE_CTX* ctx = X509_STORE_CTX_new();
 		X509_STORE* store = X509_STORE_new();
 
-		X509_STORE_add_cert(store, m_cert);
+		X509_STORE_set_default_paths(store);
+		const char* system_bundles[] = {
+			"/etc/ssl/certs/ca-certificates.crt",   // Debian, Ubuntu
+			"/etc/pki/tls/certs/ca-bundle.crt",     // Fedora, RHEL
+			"/etc/ssl/ca-bundle.pem",               // openSUSE
+			"/etc/ssl/cert.pem",                    // Alpine, Arch, macOS
+			NULL };
+		for (int i = 0; system_bundles[i]; ++i)
+		{
+			if (NSFile::CFileBinary::Exists(UTF8_TO_U(std::string(system_bundles[i]))))
+			{
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+				X509_STORE_load_file(store, system_bundles[i]);
+#else
+				X509_STORE_load_locations(store, system_bundles[i], NULL);
+#endif
+			}
+		}
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+		X509_STORE_load_path(store, "/etc/ssl/certs");
+#else
+		X509_STORE_load_locations(store, NULL, "/etc/ssl/certs");
+#endif
+
 		X509_STORE_CTX_init(ctx, store, m_cert, NULL);
 
 		int status = X509_verify_cert(ctx);

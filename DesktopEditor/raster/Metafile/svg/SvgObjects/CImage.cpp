@@ -78,7 +78,7 @@ namespace SVG
 		{
 			std::wstring wsFilePath = NSSystemPath::ShortenPath(m_wsHref);
 	
-			bool bIsAllowExternalLocalFiles = true;
+			bool bIsAllowExternalLocalFiles = false;
 			if (NSProcessEnv::IsPresent(NSProcessEnv::Converter::gc_allowPrivateIP))
 				bIsAllowExternalLocalFiles = NSProcessEnv::GetBoolValue(NSProcessEnv::Converter::gc_allowPrivateIP);
 

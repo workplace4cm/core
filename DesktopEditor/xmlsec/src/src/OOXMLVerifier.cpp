@@ -1,3 +1,4 @@
+#include <regex>
 #include "./../include/OOXMLVerifier.h"
 #include "common.h"
 
@@ -272,6 +273,30 @@ public:
 		// 4) Objects
 		std::vector<XmlUtils::CXmlNode> nodesReferences = m_node.ReadNode(L"SignedInfo").GetNodes(L"Reference");
 		nRefsCount = nodesReferences.size();
+
+		// The manifest checked above must be the element the signature covers:
+		// SignedInfo has to reference it, and its Id must be unique, otherwise a
+		// second element with the same Id could be verified in its place.
+		{
+			bool bManifestSigned = false;
+			for (size_t i = 0; i < nRefsCount; i++)
+			{
+				if ("#idPackageObject" == nodesReferences[i].GetAttributeA("URI"))
+					bManifestSigned = true;
+			}
+
+			std::string sSignatureXml = U_TO_UTF8(m_node.GetXml());
+			std::regex oIdPackage("\\bId\\s*=\\s*[\"']idPackageObject[\"']");
+			std::regex oIdOffice("\\bId\\s*=\\s*[\"']idOfficeObject[\"']");
+			std::ptrdiff_t nPackageIds = std::distance(std::sregex_iterator(sSignatureXml.begin(), sSignatureXml.end(), oIdPackage), std::sregex_iterator());
+			std::ptrdiff_t nOfficeIds = std::distance(std::sregex_iterator(sSignatureXml.begin(), sSignatureXml.end(), oIdOffice), std::sregex_iterator());
+
+			if (!bManifestSigned || 1 != nPackageIds || nOfficeIds > 1)
+			{
+				m_valid = OOXML_SIGNATURE_INVALID;
+				return;
+			}
+		}
 		for (int i = 0; i < nRefsCount; i++)
 		{
 			XmlUtils::CXmlNode tmp= nodesReferences[i];
@@ -604,9 +629,14 @@ public:
 			return OOXML_SIGNATURE_INVALID;
 
 		int nAlg = NSCertificate::GetOOXMLHashAlg(nodeMethod.GetAttributeA("Algorithm"));
+		if (OOXML_HASH_ALG_INVALID == nAlg)
+			return OOXML_SIGNATURE_INVALID;
+
 		std::string sCalcValue = m_cert->GetHash(sXml, nAlg);
 
-		if (sCalcValue != sValue)
+		// An unknown digest gives an empty hash, which must never match an
+		// empty DigestValue.
+		if (sCalcValue.empty() || sCalcValue != sValue)
 			return OOXML_SIGNATURE_INVALID;
 
 		return OOXML_SIGNATURE_VALID;

@@ -242,7 +242,31 @@ public:
 
 	virtual int VerifySelf()
 	{
-		return OPEN_SSL_WARNING_OK;
+		// Trust the signer only if Windows can build a chain to a trusted root
+		// and the certificate is valid now. A self-made certificate fails.
+		if (NULL == m_context)
+			return OPEN_SSL_WARNING_NOVERIFY;
+
+		CERT_CHAIN_PARA chainPara;
+		memset(&chainPara, 0, sizeof(chainPara));
+		chainPara.cbSize = sizeof(chainPara);
+
+		PCCERT_CHAIN_CONTEXT pChain = NULL;
+		if (!CertGetCertificateChain(NULL, m_context, NULL, m_context->hCertStore, &chainPara, 0, NULL, &pChain) || NULL == pChain)
+			return OPEN_SSL_WARNING_NOVERIFY;
+
+		CERT_CHAIN_POLICY_PARA policyPara;
+		memset(&policyPara, 0, sizeof(policyPara));
+		policyPara.cbSize = sizeof(policyPara);
+
+		CERT_CHAIN_POLICY_STATUS policyStatus;
+		memset(&policyStatus, 0, sizeof(policyStatus));
+		policyStatus.cbSize = sizeof(policyStatus);
+
+		BOOL bPolicy = CertVerifyCertificateChainPolicy(CERT_CHAIN_POLICY_BASE, pChain, &policyPara, &policyStatus);
+		CertFreeCertificateChain(pChain);
+
+		return (bPolicy && 0 == policyStatus.dwError) ? OPEN_SSL_WARNING_OK : OPEN_SSL_WARNING_NOVERIFY;
 	}
 
 	std::vector<int> GetHashAlgs()

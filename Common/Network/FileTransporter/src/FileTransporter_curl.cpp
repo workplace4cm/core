@@ -121,6 +121,15 @@ namespace NSNetwork
 					curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
 					/* tell libcurl to follow redirection(default false) */
 					curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+					curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 5L);
+					// Only web addresses, also after a redirect: no file://, ftp://, etc.
+#if LIBCURL_VERSION_NUM >= 0x075500
+					curl_easy_setopt(curl, CURLOPT_PROTOCOLS_STR, "http,https");
+					curl_easy_setopt(curl, CURLOPT_REDIR_PROTOCOLS_STR, "http,https");
+#else
+					curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
+					curl_easy_setopt(curl, CURLOPT_REDIR_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
+#endif
 					/* some servers don't like requests that are made without a user-agent field, so we provide one */
 					curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:38.0) Gecko/20100101 Firefox/38.0");
 					res = curl_easy_perform(curl);

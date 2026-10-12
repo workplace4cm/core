@@ -336,6 +336,20 @@ bool ReadXmlEncryptionInfo(const std::string & xml_string, _ecmaCryptData & cryp
 	else if (keyData.hashAlgorithm == "SHA512")	cryptData.dataHashAlgorithm = CRYPT_METHOD::SHA512;
 	else if (keyData.hashAlgorithm == "MD5")	cryptData.dataHashAlgorithm = CRYPT_METHOD::MD5;
 
+	// These values come from the file. Out-of-range ones would make key
+	// derivation loop for hours or allocate huge or negative buffers.
+	// (Office itself writes spinCount 100000 and sizes of at most 64 bytes.)
+	if (cryptData.spinCount < 0 || cryptData.spinCount > 10000000)
+		return false;
+	if (cryptData.keySize < 5 || cryptData.keySize > 64 || cryptData.dataKeySize < 5 || cryptData.dataKeySize > 64)
+		return false;
+	if (cryptData.blockSize < 1 || cryptData.blockSize > 64 || cryptData.dataBlockSize < 1 || cryptData.dataBlockSize > 64)
+		return false;
+	if (cryptData.hashSize < 1 || cryptData.hashSize > 64 || cryptData.dataHashSize < 1 || cryptData.dataHashSize > 64)
+		return false;
+	if (cryptData.saltSize < 1 || cryptData.saltSize > 64 || cryptData.dataSaltSize < 1 || cryptData.dataSaltSize > 64)
+		return false;
+
 	return true;
 }
 

@@ -234,7 +234,9 @@ namespace NSNetwork
 			{
 				m_pInternal->m_bComplete = false;
 
-				bool bIsCanUseNetwork = true;
+				// No network access unless the process explicitly allows it:
+				// opening or converting a document must not fetch anything.
+				bool bIsCanUseNetwork = false;
 				if (NSProcessEnv::IsPresent(NSProcessEnv::Converter::gc_allowNetworkRequest))
 					bIsCanUseNetwork = NSProcessEnv::GetBoolValue(NSProcessEnv::Converter::gc_allowNetworkRequest);
 
